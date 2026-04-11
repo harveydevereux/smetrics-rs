@@ -1,20 +1,51 @@
-use smetrics_rs::bluesky::feed::get_user_feed;
+use std::{fs::create_dir, path::Path, process::exit};
 
 use clap::Parser;
+use smetrics_rs::bluesky;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
     /// Bluesky handle to analyse.
-    #[arg(short, long)]
+    #[arg(long)]
     bluesky: String,
+    /// Path of data store directory.
+    #[arg(long)]
+    data: Option<String>,
+    /// Maximum days to watch a posts engagement.
+    #[arg(long, default_value_t = 14u64)]
+    max_watch_days: u64,
+    /// Minimum ost engagement watch interval ms.
+    #[arg(long, default_value_t = 60000u64)]
+    min_interval_ms: u64,
+    /// Write JSON prettily
+    #[arg(long, default_value_t = false)]
+    pretty_json: bool
 }
 
 #[tokio::main]
 async fn main(){
     let args = Args::parse();
 
-    let json = get_user_feed(&args.bluesky).await;
-    println!("{:?}", json);
+    let path = match &args.data {
+        Some(p) => Path::new(p),
+        None => Path::new("./data")
+    };
+    println!("{}", args.max_watch_days);
+
+    check_path(&path);
+
+    bluesky::feed::scrape(&args.bluesky, &path, args.max_watch_days, args.min_interval_ms, args.pretty_json).await;
+}
+
+fn check_path(path: &Path) {
+
+    if !path.exists() {
+        match create_dir(path) {
+            Ok(_) => {println!("Created new data store: {:?}", path);},
+            Err(why) => {println!("Could not create new data store: {}", why); exit(1)}
+        }
+    }
+
 }
