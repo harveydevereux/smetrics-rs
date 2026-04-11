@@ -30,6 +30,7 @@ pub struct Embed {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
+/// Partial data from Bluesky on a Post.
 pub struct Post {
     pub uri: String,
     pub record: Record,
@@ -49,10 +50,12 @@ pub struct PostView {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Response {
+/// The response data from Bluesky.
+struct Response {
     pub feed: Vec<PostView>
 }
 
+/// Obtain PostViews from a given users feed.
 async fn get_user_feed(user: &str) -> Vec<Box<dyn crate::Post>> {
     let req = reqwest::get(format!("https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor={}&limit=100", user)).await.unwrap();
     let response: Response = req.json().await.unwrap();
@@ -76,7 +79,7 @@ impl crate::Post for Post {
         &self.uri
     }
 
-    fn time(&self) -> DateTime<Utc> {
+    fn creation_time(&self) -> DateTime<Utc> {
         self.record.created_at
     }
 
@@ -86,6 +89,10 @@ impl crate::Post for Post {
 
 }
 
+/// Obtain new posts and merge them with local data.
+///
+/// The current engagement values are only store if the post creation time
+/// and our current times are within supplied bounds.
 pub async fn scrape(user: &str, path: &Path, max_watch_days: u64, min_interval_ms: u64, pretty: bool) {
     let fut_posts = get_user_feed(user);
 
@@ -125,7 +132,7 @@ pub async fn scrape(user: &str, path: &Path, max_watch_days: u64, min_interval_m
         }
         else {
 
-            if ((now - post.time()).num_days() as u64) > max_watch_days {
+            if ((now - post.creation_time()).num_days() as u64) > max_watch_days {
                 continue
             }
 

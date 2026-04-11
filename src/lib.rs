@@ -8,6 +8,7 @@ pub mod util;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
+/// Represent an engagment score at a particular observation time.
 pub struct TimedEngagement {
     pub engagement: u64,
     pub time: DateTime<Utc>
@@ -15,6 +16,7 @@ pub struct TimedEngagement {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
+/// A post's data, hashtahs, the creation time, and engagment timeseries.
 pub struct PostData {
     pub hashtags: Vec<String>,
     pub time: DateTime<Utc>,
@@ -27,7 +29,7 @@ pub trait Post {
 
     fn uri(&self) -> &str;
 
-    fn time(&self) -> DateTime<Utc>;
+    fn creation_time(&self) -> DateTime<Utc>;
 
     fn engagement(&self) -> u64;
 
