@@ -1,7 +1,7 @@
 use std::{fs::create_dir, path::Path, process::exit};
 
 use clap::Parser;
-use smetrics_rs::bluesky;
+use smetrics_rs::{bluesky, scrape, tumblr};
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -10,6 +10,12 @@ struct Args {
     /// Bluesky handle to analyse.
     #[arg(long)]
     bluesky: String,
+    /// Tumblr handle to analyse.
+    #[arg(long)]
+    tumblr: String,
+    /// Tumblr API key.
+    #[arg(long)]
+    tumblr_api_key: String,
     /// Path of data store directory.
     #[arg(long)]
     data: Option<String>,
@@ -32,11 +38,27 @@ async fn main(){
         Some(p) => Path::new(p),
         None => Path::new("./data")
     };
-    println!("{}", args.max_watch_days);
 
     check_path(&path);
 
-    bluesky::feed::scrape(&args.bluesky, &path, args.max_watch_days, args.min_interval_ms, args.pretty_json).await;
+    scrape(
+        &args.bluesky,
+        bluesky::get_user_feed,
+        &path.join("bluesky.json"),
+        args.max_watch_days,
+        args.min_interval_ms,
+        args.pretty_json
+    ).await;
+
+    scrape(
+        &args.tumblr,
+        tumblr::get_user_feed(&args.tumblr_api_key),
+        &path.join("tumblr.json"),
+        args.max_watch_days,
+        args.min_interval_ms,
+        args.pretty_json
+    ).await;
+
 }
 
 fn check_path(path: &Path) {
