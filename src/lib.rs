@@ -7,6 +7,7 @@ use crate::util::read_file_utf8;
 
 pub mod bluesky;
 pub mod tumblr;
+pub mod instagram;
 pub mod util;
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -56,6 +56,8 @@ struct Response {
 }
 
 /// Obtain PostViews from a given users feed.
+///
+/// See https://docs.bsky.app/docs/api/app-bsky-feed-get-author-feed
 pub async fn get_user_feed(user: &str) -> Vec<Box<dyn crate::Post>> {
     let req = reqwest::get(format!("https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor={}&limit=100", user)).await.unwrap();
     let response: Response = req.json().await.unwrap();

@@ -1,7 +1,7 @@
 use std::{fs::create_dir, path::Path, process::exit};
 
 use clap::Parser;
-use smetrics_rs::{bluesky, scrape, tumblr};
+use smetrics_rs::{bluesky, scrape, tumblr, instagram};
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -16,6 +16,9 @@ struct Args {
     /// Tumblr API key.
     #[arg(long)]
     tumblr_api_key: String,
+    /// Instagram API key.
+    #[arg(long)]
+    instagram_api_key: String,
     /// Path of data store directory.
     #[arg(long)]
     data: Option<String>,
@@ -54,6 +57,15 @@ async fn main(){
         &args.tumblr,
         tumblr::get_user_feed(&args.tumblr_api_key),
         &path.join("tumblr.json"),
+        args.max_watch_days,
+        args.min_interval_ms,
+        args.pretty_json
+    ).await;
+
+    scrape(
+        "me",
+        instagram::get_user_feed(&args.instagram_api_key),
+        &path.join("instagram.json"),
         args.max_watch_days,
         args.min_interval_ms,
         args.pretty_json

@@ -30,6 +30,8 @@ struct Response {
 }
 
 /// Obtain Posts from a given blogs feed.
+///
+/// See https://www.tumblr.com/docs/en/api/v2#posts--retrieve-published-posts
 pub fn get_user_feed(key: &str) -> impl AsyncFn(&str) -> Vec<Box<dyn crate::Post>> {
     async move |user: &str| -> Vec<Box<dyn crate::Post>> {
         let req = reqwest::get(format!("https://api.tumblr.com/v2/blog/{}.tumblr.com/posts?api_key={}", user, key)).await.unwrap();
