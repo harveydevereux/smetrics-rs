@@ -43,7 +43,7 @@ pub trait Post {
 ///
 /// The current engagement values are only store if the post creation time
 /// and our current times are within supplied bounds.
-pub async fn scrape<T: AsyncFn(&str) -> Vec<Box<dyn crate::Post>>>(
+pub async fn update<T: AsyncFn(&str) -> Vec<Box<dyn crate::Post>>>(
     user: &str,
     get_user_feed: T,
     path: &Path,
@@ -74,6 +74,7 @@ pub async fn scrape<T: AsyncFn(&str) -> Vec<Box<dyn crate::Post>>>(
     }
 
     for post in fut_posts.await {
+        // If unseen always store.
         if !data[user].contains_key(post.uri()) {
             if let Some(val) = data.get_mut(user) {
                 val.insert (
@@ -88,19 +89,22 @@ pub async fn scrape<T: AsyncFn(&str) -> Vec<Box<dyn crate::Post>>>(
         }
         else {
 
+            // Don't store if older than max_watch_days.
             if ((now - post.creation_time()).num_days() as u64) > max_watch_days {
                 continue
             }
 
             if let Some(val) = data.get_mut(user) {
-                match val.get_mut(post.uri()).unwrap().engagement.last() {
-                    Some(data) => {
-                        if ((now-data.time).num_milliseconds() as u64) < min_interval_ms {
-                            continue
-                        }
-                    },
-                    None => {}
+                if val[post.uri()].engagement.last().is_some_and
+                (
+                    |obs| -> bool {
+                        if ((now-obs.time).num_milliseconds() as u64) < min_interval_ms { return true }
+                        false
+                    }
+                ) {
+                    continue;
                 }
+
                 val.get_mut(post.uri()).unwrap().engagement.push(
                     TimedEngagement { engagement: post.engagement(), time: now }
                 );

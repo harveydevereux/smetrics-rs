@@ -1,7 +1,7 @@
 use std::{fs::create_dir, path::Path, process::exit};
 
 use clap::Parser;
-use smetrics_rs::{bluesky, scrape, tumblr, instagram};
+use smetrics_rs::{bluesky, update, tumblr, instagram};
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -23,10 +23,10 @@ struct Args {
     #[arg(long)]
     data: Option<String>,
     /// Maximum days to watch a posts engagement.
-    #[arg(long, default_value_t = 14u64)]
+    #[arg(long, default_value_t = 2u64)]
     max_watch_days: u64,
-    /// Minimum ost engagement watch interval ms.
-    #[arg(long, default_value_t = 60000u64)]
+    /// Minimum post engagement watch interval ms.
+    #[arg(long, default_value_t = 600000u64)]
     min_interval_ms: u64,
     /// Write JSON prettily
     #[arg(long, default_value_t = false)]
@@ -44,7 +44,7 @@ async fn main(){
 
     check_path(&path);
 
-    scrape(
+    update(
         &args.bluesky,
         bluesky::get_user_feed,
         &path.join("bluesky.json"),
@@ -53,7 +53,7 @@ async fn main(){
         args.pretty_json
     ).await;
 
-    scrape(
+    update(
         &args.tumblr,
         tumblr::get_user_feed(&args.tumblr_api_key),
         &path.join("tumblr.json"),
@@ -62,9 +62,9 @@ async fn main(){
         args.pretty_json
     ).await;
 
-    scrape(
+    update(
         "me",
-        instagram::get_user_feed(&args.instagram_api_key),
+        instagram::get_user_feed(&args.instagram_api_key, path, args.max_watch_days),
         &path.join("instagram.json"),
         args.max_watch_days,
         args.min_interval_ms,
