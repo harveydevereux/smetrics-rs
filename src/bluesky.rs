@@ -85,4 +85,11 @@ impl crate::Post for Post {
         self.bookmark_count+self.like_count+2*self.quote_count+2*self.reply_count+self.repost_count
     }
 
+    fn title(&self) -> &str {
+        match self.record.text.split("\n").next() {
+            Some(s) => s,
+            None => ""
+        }
+    }
+
 }

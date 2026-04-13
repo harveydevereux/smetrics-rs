@@ -24,7 +24,8 @@ pub struct TimedEngagement {
 pub struct PostData {
     pub hashtags: Vec<String>,
     pub time: DateTime<Utc>,
-    pub engagement: Vec<TimedEngagement>
+    pub engagement: Vec<TimedEngagement>,
+    pub title: String
 }
 
 pub trait Post {
@@ -36,6 +37,8 @@ pub trait Post {
     fn creation_time(&self) -> DateTime<Utc>;
 
     fn engagement(&self) -> u64;
+
+    fn title(&self) -> &str;
 
 }
 
@@ -82,7 +85,8 @@ pub async fn update<T: AsyncFn(&str) -> Vec<Box<dyn crate::Post>>>(
                     PostData {
                         hashtags: post.hashtags().iter().map(|s|s.to_string()).collect(),
                         time: now,
-                        engagement: vec![TimedEngagement { engagement: post.engagement(), time: now }]
+                        engagement: vec![TimedEngagement { engagement: post.engagement(), time: now }],
+                        title: post.title().to_string()
                     }
                 );
             };

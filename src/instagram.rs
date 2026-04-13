@@ -152,4 +152,11 @@ impl crate::Post for Post {
         self.like_count+2*self.comments_count
     }
 
+    fn title(&self) -> &str {
+        match self.caption.split("\n").next() {
+            Some(s) => s,
+            None => ""
+        }
+    }
+
 }

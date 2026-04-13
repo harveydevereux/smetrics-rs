@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -7,7 +8,8 @@ struct Post {
     note_count: u64,
     post_url: String,
     tags: Vec<String>,
-    timestamp: u64
+    timestamp: u64,
+    body: String
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -38,8 +40,18 @@ pub fn get_user_feed(key: &str) -> impl AsyncFn(&str) -> Vec<Box<dyn crate::Post
         let request: Response = req.json().await.unwrap();
 
         let mut posts: Vec<Box<dyn crate::Post>> = Vec::new();
-
-        for post in request.response.posts {
+        let p_selector = Selector::parse("p").unwrap();
+        for mut post in request.response.posts {
+            match post.body.split("\n").next() {
+                Some(body) => {
+                    let document =  Html::parse_document(body);
+                    post.body = document.select(&p_selector)
+                                            .map(|p| p.text().collect::<Vec<_>>().join(""))
+                                            .collect::<Vec<String>>()
+                                            .join("\n");
+                }
+                None => {}
+            }
             posts.push(Box::new(post));
         }
 
@@ -63,6 +75,13 @@ impl crate::Post for Post {
 
     fn engagement(&self) -> u64 {
         self.note_count
+    }
+
+    fn title(&self) -> &str {
+        match self.body.split("\n").next() {
+            Some(s) => s,
+            None => ""
+        }
     }
 
 }
