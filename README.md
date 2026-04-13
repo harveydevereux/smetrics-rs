@@ -10,5 +10,5 @@
   - Then create a [new app](https://developers.facebook.com/apps/)
   - Give it the "Manage messaging and Instagram content" use case permissions.
   - Add your instagram as a tester.
-  - Finally, generate an access token (which will expire etc.).
+  - Finally, generate an access token (which will expire etc???).
   - It does not need to be published.
